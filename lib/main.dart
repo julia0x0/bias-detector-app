@@ -2,12 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:xml/xml.dart';
-//import 'package:chaleno/chaleno.dart';
+import 'package:chaleno/chaleno.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() {
-  Gemini.init(apiKey: "AIzaSyDPdHzqj9t-QU6wBXLtETggAG9-GgxOsLU");
+  //Gemini.init(apiKey: "API KEY HERE");
   runApp(const App());
 }
 
@@ -75,20 +75,16 @@ class ArticlePart {
 class _AppState extends State<App> {
   List<Article> articles = [];
   int? pageId;
-  String updateUrl = "localhost:6363";
   List<String> rssContentUrls = [
     "https://www.rt.com/rss/news/",
     "https://moxie.foxnews.com/google-publisher/latest.xml",
   ];
-  //String ajUrl = "https://www.aljazeera.com/xml/rss/all.xml";
-  String bbcUrl = "https://feeds.bbci.co.uk/news/world/rss.xml";
+  String ajUrl = "https://www.aljazeera.com/xml/rss/all.xml";
 
   Future<void> update() async {
-    //var response = await http.get(Uri.https(updateUrl));
     var client = http.Client();
     var rssArticles = <Article>[];
-    /*var xmlString = (await client.get(Uri.parse(ajUrl))).body;
-    var document = XmlDocument.parse(xmlString);
+    var document = XmlDocument.parse((await client.get(Uri.parse(ajUrl))).body);
     var imageUrl =
         document
             .findAllElements("image")
@@ -111,7 +107,7 @@ class _AppState extends State<App> {
           parts: [],
         ),
       );
-    }*/
+    }
     for (var url in rssContentUrls) {
       var xmlString = (await client.get(Uri.parse(url))).body;
       var document = XmlDocument.parse(xmlString);
@@ -148,6 +144,7 @@ class _AppState extends State<App> {
                               .replaceAll("&ndash;", "-")
                               .replaceAll("&hellip;", "...")
                               .replaceAll("&nbsp;", " ")
+                              .replaceAll("&#039;", "'")
                               .replaceAll("Read more", "")
                               .replaceAll(RegExp(r'\<.*?\>'), "")
                               .trim(),
@@ -159,7 +156,6 @@ class _AppState extends State<App> {
         );
       }
     }
-    Gemini.init(apiKey: "");
     articles = rssArticles;
     setState(() {});
   }
@@ -179,12 +175,6 @@ class _AppState extends State<App> {
       });
     }
 
-    void setUpdateUrl(String url) {
-      setState(() {
-        updateUrl = url;
-      });
-    }
-
     void updateArticle(Article a) {
       if (pageId == null) {
         return;
@@ -195,12 +185,7 @@ class _AppState extends State<App> {
     }
 
     if (pageId == null) {
-      page = HomePage(
-        articles: articles,
-        setUpdateUrl: setUpdateUrl,
-        updateUrl: updateUrl,
-        rebuild: rebuild,
-      );
+      page = HomePage(articles: articles, rebuild: rebuild);
     } else {
       page = ArticlePage(
         article: articles[pageId!],
@@ -252,12 +237,12 @@ class _ArticlePageState extends State<ArticlePage> {
     });
   }
 
-  /*Future<void> updateArticle() async {
+  Future<void> updateArticle() async {
     if (widget.article.parts.isEmpty) {
       var parser = await Chaleno().load(widget.article.url);
       var parts =
           parser!
-              .querySelector("#main-content-area.wysiwyg")
+              .querySelector("#main-content-area .wysiwyg")
               .innerHTML!
               .split(RegExp(r'\<\/?p\>'))
               .map(
@@ -269,7 +254,9 @@ class _ArticlePageState extends State<ArticlePage> {
                         .replaceAll("&ndash;", "-")
                         .replaceAll("&hellip;", "...")
                         .replaceAll("&nbsp;", " ")
+                        .replaceAll("&#039;", "'")
                         .replaceAll("Read more", "")
+                        .replaceAll("Advertisement", "")
                         .replaceAll(RegExp(r'\<.*?\>'), "")
                         .trim(),
               )
@@ -286,14 +273,14 @@ class _ArticlePageState extends State<ArticlePage> {
         ),
       );
     }
-  }*/
+  }
 
   @override
   void initState() {
     super.initState();
-    //updateArticle();
+    updateArticle();
     if (widget.article.parts.isNotEmpty) {
-      gemini();
+      //gemini();
     }
   }
 
@@ -369,17 +356,9 @@ class _ArticlePageState extends State<ArticlePage> {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({
-    super.key,
-    required this.rebuild,
-    required this.setUpdateUrl,
-    required this.updateUrl,
-    required this.articles,
-  });
+  const HomePage({super.key, required this.rebuild, required this.articles});
 
   final Function(int?) rebuild;
-  final Function(String) setUpdateUrl;
-  final String updateUrl;
   final List<Article> articles;
 
   @override
@@ -395,25 +374,6 @@ class _HomePageState extends State<HomePage> {
           Spacer(),
           Text("Bias Detection", style: TextStyle(fontSize: 26)),
           Spacer(),
-          IconButton.filled(
-            icon: Icon(Icons.settings_rounded),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: TextFormField(
-                      autocorrect: false,
-                      initialValue: widget.updateUrl,
-                      onChanged: (url) {
-                        widget.setUpdateUrl(url);
-                      },
-                    ),
-                  );
-                },
-              );
-            },
-          ),
         ],
       ),
     ];
