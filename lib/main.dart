@@ -280,7 +280,7 @@ class _ArticlePageState extends State<ArticlePage> {
     super.initState();
     updateArticle();
     if (widget.article.parts.isNotEmpty) {
-      //gemini();
+      gemini();
     }
   }
 
