@@ -7,7 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() {
-  Gemini.init(apiKey: "AIzaSyDPdHzqj9t-QU6wBXLtETggAG9-GgxOsLU");
+  Gemini.init(apiKey: "API KEY HERE");
   runApp(const App());
 }
 
